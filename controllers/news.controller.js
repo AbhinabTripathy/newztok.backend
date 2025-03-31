@@ -9,7 +9,6 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Modify the createNews function to properly handle content types and file uploads
 
 const newsController = {};
 
@@ -39,7 +38,7 @@ const storage = multer.diskStorage({
 const upload = multer({ 
     storage: storage,
     limits: {
-        fileSize: 10 * 1024 * 1024, // 10MB limit
+        fileSize: 50 * 1024 * 1024, // Increased to 50MB limit
     }
 });
 
@@ -49,7 +48,6 @@ newsController.createNews = async (req, res) => {
         // Use a single upload field that accepts both image and video
         const uploadAny = upload.single('featuredImage');
         
-        // Inside the createNews function, modify the part where you extract the request body:
         
         uploadAny(req, res, async function(err) {
             if (err) {

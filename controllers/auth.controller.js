@@ -81,6 +81,7 @@ authController.createEditor = async (req, res) => {
 // Create journalist (editor only)
 authController.createJournalist = async (req, res) => {
     const { username, email, password, confirmPassword, mobile } = req.body;
+    const editorId = req.user.id; // Get the editor's ID from the authenticated user
 
     // Validate required fields
     if (!username || !email || !password || !confirmPassword || !mobile) {
@@ -134,7 +135,8 @@ authController.createJournalist = async (req, res) => {
             email,
             password: hashedPassword,
             mobile,
-            role: 'journalist'
+            role: 'journalist',
+            createdBy: editorId // Set the createdBy field to the editor's ID
         });
 
         const journalistResponse = journalist.toJSON();
