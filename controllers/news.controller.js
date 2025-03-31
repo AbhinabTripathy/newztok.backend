@@ -45,11 +45,13 @@ const upload = multer({
 // Create new news post (for journalists)
 newsController.createNews = async (req, res) => {
     try {
-        // Use a single upload field that accepts both image and video
-        const uploadAny = upload.single('featuredImage');
+        // Use fields to handle both image and video uploads with different field names
+        const uploadFields = upload.fields([
+            { name: 'featuredImage', maxCount: 1 },
+            { name: 'video', maxCount: 1 }
+        ]);
         
-        
-        uploadAny(req, res, async function(err) {
+        uploadFields(req, res, async function(err) {
             if (err) {
                 console.error('Upload error:', err);
                 return res.error(
@@ -73,7 +75,7 @@ newsController.createNews = async (req, res) => {
                 const journalistId = req.mwValue.auth.id;
                 
                 console.log('Cleaned request body:', { title, content, category, contentType, youtubeUrl });
-                console.log('File:', req.file);
+                console.log('Files:', req.files);
                 
                 // Create news object with common fields
                 const newsData = {
@@ -87,8 +89,9 @@ newsController.createNews = async (req, res) => {
                 
                 // Handle content type specific fields
                 if (contentType === 'standard') {
-                    if (req.file) {
-                        newsData.featuredImage = `/uploads/images/${req.file.filename}`;
+                    if (req.files && req.files.featuredImage && req.files.featuredImage[0]) {
+                        const file = req.files.featuredImage[0];
+                        newsData.featuredImage = `/uploads/images/${file.filename}`;
                         newsData.thumbnailUrl = newsData.featuredImage; // Use same image for thumbnail
                     }
                 } else if (contentType === 'video') {
@@ -99,16 +102,9 @@ newsController.createNews = async (req, res) => {
                         if (videoId && videoId[1]) {
                             newsData.thumbnailUrl = `https://img.youtube.com/vi/${videoId[1]}/hqdefault.jpg`;
                         }
-                    } else if (req.file) {
-                        // If it's a video file, move it to the videos directory
-                        const oldPath = path.join(__dirname, '../uploads/images', req.file.filename);
-                        const newPath = path.join(__dirname, '../uploads/videos', req.file.filename);
-                        
-                        if (fs.existsSync(oldPath)) {
-                            fs.renameSync(oldPath, newPath);
-                        }
-                        
-                        newsData.videoPath = `/uploads/videos/${req.file.filename}`;
+                    } else if (req.files && req.files.video && req.files.video[0]) {
+                        const file = req.files.video[0];
+                        newsData.videoPath = `/uploads/videos/${file.filename}`;
                     }
                 }
                 
